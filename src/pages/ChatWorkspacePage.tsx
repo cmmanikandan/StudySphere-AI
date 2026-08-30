@@ -394,7 +394,7 @@ export const ChatWorkspacePage: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] sm:h-[calc(100vh-6rem)] flex rounded-none sm:rounded-3xl overflow-hidden glass-card border-0 sm:border border-slate-200/80 dark:border-slate-800/80 shadow-none sm:shadow-2xl relative">
+    <div className="h-full w-full min-w-0 flex rounded-none sm:rounded-3xl overflow-hidden glass-card border-0 sm:border border-slate-200/80 dark:border-slate-800/80 shadow-none sm:shadow-2xl relative">
       {/* Left Chat Sidebar (Conversations) */}
       <div className="w-80 border-r border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-[#070b14]/80 flex flex-col justify-between hidden md:flex">
         <div className="p-4 space-y-3">
@@ -508,7 +508,7 @@ export const ChatWorkspacePage: React.FC = () => {
       </div>
 
       {/* Right Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white dark:bg-[#080d19] relative">
+      <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-[#080d19] relative overflow-hidden">
         {/* Top Chat Action Bar */}
         <div className="p-3 sm:px-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2 bg-slate-50/50 dark:bg-[#0b101d]/50 relative z-30 overflow-visible">
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-visible">
@@ -627,7 +627,7 @@ export const ChatWorkspacePage: React.FC = () => {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 relative"
+          className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-4 sm:space-y-6 relative w-full min-w-0"
         >
           {messages.length === 0 ? (
             /* Clean Empty AI Workspace with Quick Study Questions */
@@ -711,28 +711,28 @@ export const ChatWorkspacePage: React.FC = () => {
               <div
                 key={msg.id}
                 id={`msg-${msg.id}`}
-                className={`flex gap-2 sm:gap-3.5 w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start items-start'}`}
+                className={`flex gap-2 sm:gap-3 w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start items-start'}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5" />
                   </div>
                 )}
 
                 <div
-                  className={`rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm space-y-2.5 ${
+                  className={`rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-sm space-y-2.5 min-w-0 break-words [word-break:break-word] overflow-hidden ${
                     msg.role === 'user'
-                      ? 'ml-auto max-w-[88%] sm:max-w-[78%] bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-tr-none'
-                      : 'mr-auto max-w-[94%] sm:max-w-[85%] bg-slate-50 dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-slate-100 rounded-tl-none'
+                      ? 'ml-auto max-w-[85%] sm:max-w-[75%] bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-tr-none'
+                      : 'mr-auto max-w-[90%] sm:max-w-[82%] bg-slate-50 dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-slate-100 rounded-tl-none'
                   }`}
                 >
                   {msg.role === 'user' ? (
-                    <p className="text-xs sm:text-sm font-medium leading-relaxed whitespace-pre-wrap">
+                    <p className="text-xs sm:text-sm font-medium leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">
                       {msg.content}
                     </p>
                   ) : (
-                    <div className="space-y-3">
-                      <div className="markdown-body text-xs sm:text-sm">
+                    <div className="space-y-3 min-w-0 max-w-full overflow-hidden">
+                      <div className="markdown-body text-xs sm:text-sm max-w-full overflow-hidden">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {msg.content}
                         </ReactMarkdown>
@@ -744,10 +744,10 @@ export const ChatWorkspacePage: React.FC = () => {
                       )}
 
                       {/* Assistant Actions Bar - Scrollable on Mobile */}
-                      <div className="pt-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs border-t border-slate-100 dark:border-slate-800/80 -mx-1 px-1">
+                      <div className="pt-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs border-t border-slate-100 dark:border-slate-800/80 -mx-1 px-1 max-w-full">
                         <button
                           onClick={() => handleCopy(msg.content, msg.id)}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors flex-shrink-0 cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors flex-shrink-0 cursor-pointer"
                           title="Copy Answer"
                         >
                           {copiedId === msg.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -757,7 +757,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         <button
                           onClick={() => handleAIAction('simplify', msg.content, msg.id)}
                           disabled={actionLoadingId !== null || sending}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-500 hover:text-violet-600 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-500 hover:text-violet-600 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
                           title="Simplify Explanation"
                         >
                           {actionLoadingId === `simplify-${msg.id}` ? (
@@ -771,7 +771,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         <button
                           onClick={() => handleAIAction('explain_more', msg.content, msg.id)}
                           disabled={actionLoadingId !== null || sending}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
                           title="Deep Dive Explanation"
                         >
                           {actionLoadingId === `explain_more-${msg.id}` ? (
@@ -785,7 +785,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         <button
                           onClick={() => handleAIAction('give_example', msg.content, msg.id)}
                           disabled={actionLoadingId !== null || sending}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
                           title="Give Real Examples"
                         >
                           {actionLoadingId === `give_example-${msg.id}` ? (
@@ -799,7 +799,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         <button
                           onClick={() => handleCreateQuizFromChat(msg.content)}
                           disabled={sending}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-500 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-500 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer"
                           title="Generate Quiz from this"
                         >
                           <FileQuestion className="w-3.5 h-3.5 text-purple-500" />

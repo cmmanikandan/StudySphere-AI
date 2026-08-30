@@ -25,21 +25,21 @@ export const Layout: React.FC = () => {
   return (
     <div
       className={`min-h-screen flex flex-col bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors duration-200 ${
-        isChatPage ? 'pb-0' : 'pb-16 lg:pb-0'
+        isChatPage ? 'pb-0 h-screen overflow-hidden' : 'pb-16 lg:pb-0'
       }`}
     >
       <Navbar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
-      <div className="flex-1 flex w-full min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 flex w-full min-w-0 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} />
         <main
-          className={`flex-1 w-full min-w-0 overflow-y-auto ${
-            isChatPage ? 'p-0 sm:p-4 lg:p-6' : 'p-4 sm:p-6 lg:p-8'
+          className={`flex-1 w-full min-w-0 ${
+            isChatPage ? 'p-0 h-[calc(100vh-4rem)] overflow-hidden flex flex-col' : 'p-4 sm:p-6 lg:p-8 overflow-y-auto'
           }`}
         >
-          <div className={`${isChatPage ? 'w-full h-full' : 'max-w-6xl mx-auto'}`}>
+          <div className={`${isChatPage ? 'w-full h-full min-w-0 flex flex-col' : 'max-w-6xl mx-auto'}`}>
             <Outlet />
           </div>
         </main>

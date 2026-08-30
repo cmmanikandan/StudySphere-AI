@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, auth, onAuthStateChanged, signInWithGoogle, logoutUser } from '../lib/firebase';
+import { auth, onAuthStateChanged, signInWithGoogle, logoutUser, type User } from '../lib/firebase';
 import { syncUserProfile } from '../lib/api';
 import { UserProfile } from '../types';
 
