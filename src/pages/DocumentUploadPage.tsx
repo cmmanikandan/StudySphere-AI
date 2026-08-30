@@ -13,6 +13,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+import { uploadDocument } from '../lib/api';
+
 export const DocumentUploadPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -97,45 +99,31 @@ export const DocumentUploadPage: React.FC = () => {
     try {
       abortControllerRef.current = new AbortController();
       setStage('uploading');
-      setProgress(15);
+      setProgress(20);
 
       const t1 = setTimeout(() => {
         setStage('reading');
-        setProgress(35);
-      }, 300);
+        setProgress(45);
+      }, 400);
 
       const t2 = setTimeout(() => {
         setStage('extracting');
-        setProgress(65);
-      }, 700);
+        setProgress(70);
+      }, 800);
 
       const t3 = setTimeout(() => {
         setStage('preparing');
-        setProgress(85);
-      }, 1100);
+        setProgress(90);
+      }, 1200);
 
-      const formData = new FormData();
-      formData.append('userId', user.uid);
-      formData.append('file', file);
-
-      const res = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-        signal: abortControllerRef.current.signal,
-      });
+      const uploadedDoc = await uploadDocument(user.uid, file);
 
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to upload and process document');
-      }
-
-      const data = await res.json();
       setProgress(100);
-      setCreatedDocId(data.document?.id || data.id);
+      setCreatedDocId(uploadedDoc.id);
       setStage('ready');
     } catch (err: any) {
       if (err.name === 'AbortError') {
