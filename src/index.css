@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f3f4f6;
+    --color-card: #ffffff;
+    --color-border: #e2e8f0;
+  }
+
+  .dark {
+    --color-bg: #070b14;
+    --color-card: #0c1322;
+    --color-border: #1a2438;
+  }
+
+  body {
+    @apply font-sans bg-[#f3f4f6] text-slate-900 dark:bg-[#070b14] dark:text-slate-100 antialiased selection:bg-violet-600 selection:text-white transition-colors duration-200;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans tracking-tight;
+  }
+}
+
+/* Custom Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-700/60 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600;
+}
+
+/* Studio & Deep Space Design System Utilities */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 shadow-md shadow-violet-500/25 hover:shadow-lg hover:shadow-violet-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 bg-white/90 dark:bg-[#0c1322]/80 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-violet-500/40 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-red-600 dark:text-red-400 bg-red-50/80 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200/60 dark:border-red-900/40 transition-all active:scale-95 cursor-pointer;
+}
+
+.glass-panel {
+  @apply bg-white/90 dark:bg-[#0c1322]/80 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800/80 shadow-sm;
+}
+
+.glass-card {
+  @apply bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-slate-800/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none hover:shadow-md hover:border-violet-500/40 dark:hover:border-violet-500/30 transition-all duration-200;
+}
+
+.card-lift {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 hover:border-violet-500/50;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 dark:from-violet-400 dark:via-indigo-300 dark:to-purple-300;
+}
+
+.gradient-border {
+  background: linear-gradient(to right, #8b5cf6, #6366f1, #a855f7);
+}
+
+.badge-pill {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide;
+}
+
+/* Markdown Typography in Chat & Summaries */
+.markdown-body {
+  @apply text-sm leading-relaxed text-slate-800 dark:text-slate-200;
+}
+
+.markdown-body h1 {
+  @apply text-xl font-extrabold text-slate-900 dark:text-white mt-4 mb-2 pb-1.5 border-b border-slate-200 dark:border-slate-800 tracking-tight;
+}
+
+.markdown-body h2 {
+  @apply text-lg font-bold text-slate-900 dark:text-white mt-4 mb-2 tracking-tight;
+}
+
+.markdown-body h3 {
+  @apply text-base font-semibold text-slate-800 dark:text-slate-100 mt-3 mb-1;
+}
+
+.markdown-body p {
+  @apply mb-3;
+}
+
+.markdown-body ul {
+  @apply list-disc list-outside pl-5 mb-3 space-y-1;
+}
+
+.markdown-body ol {
+  @apply list-decimal list-outside pl-5 mb-3 space-y-1;
+}
+
+.markdown-body li {
+  @apply leading-normal;
+}
+
+.markdown-body blockquote {
+  @apply border-l-4 border-violet-500 pl-3.5 py-1.5 italic bg-violet-50/60 dark:bg-violet-950/30 rounded-r-2xl my-3 text-slate-700 dark:text-slate-300;
+}
+
+.markdown-body code {
+  @apply font-mono text-xs bg-slate-100 dark:bg-slate-800/80 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60;
+}
+
+.markdown-body pre {
+  @apply bg-slate-900 text-slate-100 p-4 rounded-2xl overflow-x-auto my-3 text-xs border border-slate-800 font-mono;
+}
+
+.markdown-body pre code {
+  @apply bg-transparent text-slate-100 p-0 border-none;
+}
+
+.markdown-body table {
+  @apply w-full border-collapse text-xs my-3 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800;
+}
+
+.markdown-body th {
+  @apply bg-slate-100 dark:bg-slate-800/90 text-left p-3 font-bold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800;
+}
+
+.markdown-body td {
+  @apply p-3 border-b border-slate-100 dark:border-slate-800/60 text-slate-600 dark:text-slate-300;
+}
+
+/* Animations */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%) scaleX(0.2);
+  }
+  50% {
+    transform: translateX(0%) scaleX(0.7);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.2);
+  }
+}
+
+.animate-indeterminate {
+  animation: indeterminate 1.5s infinite ease-in-out;
+  transform-origin: left;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideRight {
+  animation: slideRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
