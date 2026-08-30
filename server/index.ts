@@ -164,7 +164,7 @@ app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
     // 3. Chunk text
     const chunks = chunkDocument(extracted, 250, 50);
 
-    // 4. Save chunks in batch
+    // 4. Save chunks in batches (to support large 50-150+ page PDFs)
     if (chunks.length > 0) {
       const chunksPayload = chunks.map((c) => ({
         document_id: docRecord.id,
@@ -175,8 +175,11 @@ app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
         metadata: c.metadata,
       }));
 
-      const { error: chunksErr } = await supabase.from('document_chunks').insert(chunksPayload);
-      if (chunksErr) console.warn('Chunks insert notice:', chunksErr);
+      for (let i = 0; i < chunksPayload.length; i += 50) {
+        const batch = chunksPayload.slice(i, i + 50);
+        const { error: chunksErr } = await supabase.from('document_chunks').insert(batch);
+        if (chunksErr) console.warn('Chunks batch insert notice:', chunksErr);
+      }
     }
 
     // 5. Update document to ready

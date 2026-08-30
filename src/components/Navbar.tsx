@@ -13,6 +13,8 @@ import {
   PanelLeftOpen,
 } from 'lucide-react';
 
+import { ConfirmModal } from './ConfirmModal';
+
 interface NavbarProps {
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
@@ -22,10 +24,12 @@ export const Navbar: React.FC<NavbarProps> = ({ sidebarOpen = true, onToggleSide
   const { user, profile, logout } = useAuth();
   const { isDark, setTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
+    setShowLogoutModal(false);
     navigate('/');
   };
 
@@ -132,8 +136,8 @@ export const Navbar: React.FC<NavbarProps> = ({ sidebarOpen = true, onToggleSide
                 </Link>
 
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                  onClick={() => setShowLogoutModal(true)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -150,6 +154,18 @@ export const Navbar: React.FC<NavbarProps> = ({ sidebarOpen = true, onToggleSide
           </Link>
         )}
       </div>
+
+      {/* Logout Confirmation Floating Modal */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        type="warning"
+        title="Sign Out of StudySphere AI"
+        message="Are you sure you want to sign out? Your study sessions, notes, and quiz history will remain safely stored."
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </header>
   );
 };

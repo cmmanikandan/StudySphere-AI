@@ -29,6 +29,7 @@ import {
 import { DocumentCardSkeleton, Skeleton } from '../components/SkeletonLoader';
 import { EmptyState } from '../components/EmptyState';
 import { RenameModal } from '../components/RenameModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const DocumentLibraryPage: React.FC = () => {
   const { user } = useAuth();
@@ -40,6 +41,7 @@ export const DocumentLibraryPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [renameTarget, setRenameTarget] = useState<DocumentItem | null>(null);
+  const [deleteTargetDoc, setDeleteTargetDoc] = useState<DocumentItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Preview State
@@ -65,20 +67,18 @@ export const DocumentLibraryPage: React.FC = () => {
     loadDocuments();
   }, [user]);
 
-  const handleDelete = async (id: string) => {
-    if (!user) return;
-    if (!window.confirm('Are you sure you want to delete this study material? All indexed chunks will be removed.')) {
-      return;
-    }
+  const handleConfirmDelete = async () => {
+    if (!user || !deleteTargetDoc) return;
     try {
-      setDeletingId(id);
-      await deleteDocument(id, user.uid);
-      setDocuments((prev) => prev.filter((d) => d.id !== id));
-      if (previewDoc?.id === id) setPreviewDoc(null);
+      setDeletingId(deleteTargetDoc.id);
+      await deleteDocument(deleteTargetDoc.id, user.uid);
+      setDocuments((prev) => prev.filter((d) => d.id !== deleteTargetDoc.id));
+      if (previewDoc?.id === deleteTargetDoc.id) setPreviewDoc(null);
     } catch (err) {
       console.error('Failed to delete document:', err);
     } finally {
       setDeletingId(null);
+      setDeleteTargetDoc(null);
     }
   };
 
@@ -320,53 +320,53 @@ export const DocumentLibraryPage: React.FC = () => {
                     className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                     title="Rename"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(doc.id)}
-                    disabled={deletingId === doc.id}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteTargetDoc(doc)}
+                      disabled={deletingId === doc.id}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors"
+                      title="Delete Study Material"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
-                {/* AI Tools & Preview/Download Buttons */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleOpenPreview(doc)}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
-                    title="Preview document notes"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDownloadText(doc)}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
-                    title="Download document text"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                  </button>
-                  <Link
-                    to={`/summaries?docId=${doc.id}`}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
-                    title="Generate Summary"
-                  >
-                    <FileSpreadsheet className="w-3.5 h-3.5" />
-                  </Link>
-                  <Link
-                    to={`/chat?docId=${doc.id}`}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm transition-all"
-                  >
-                    <MessageSquareText className="w-3.5 h-3.5" />
-                    <span>Chat</span>
-                  </Link>
+                  {/* AI Tools & Preview/Download Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleOpenPreview(doc)}
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                      title="Preview document notes"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDownloadText(doc)}
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                      title="Download document text"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <Link
+                      to={`/summaries?docId=${doc.id}`}
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                      title="Generate Summary"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                    </Link>
+                    <Link
+                      to={`/chat?docId=${doc.id}`}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm transition-all"
+                    >
+                      <MessageSquareText className="w-3.5 h-3.5" />
+                      <span>Chat</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
       ) : (
         /* List View */
         <div className="glass-card rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800/80">
@@ -416,8 +416,8 @@ export const DocumentLibraryPage: React.FC = () => {
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(doc.id)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    onClick={() => setDeleteTargetDoc(doc)}
+                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -435,6 +435,19 @@ export const DocumentLibraryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Floating Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTargetDoc}
+        type="danger"
+        title="Delete Study Material"
+        message={`Are you sure you want to delete "${deleteTargetDoc?.original_file_name}"? All indexed chunks and summaries for this document will be permanently removed.`}
+        confirmLabel="Delete Material"
+        cancelLabel="Keep Document"
+        isLoading={deletingId !== null}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetDoc(null)}
+      />
 
       {/* Rename Document Modal */}
       {renameTarget && (

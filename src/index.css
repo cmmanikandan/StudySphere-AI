@@ -24,6 +24,15 @@
   }
 }
 
+/* Enhanced Light Mode Text Contrast */
+html:not(.dark) .text-slate-400 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #475569 !important;
+}
+
 /* Custom Smooth Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

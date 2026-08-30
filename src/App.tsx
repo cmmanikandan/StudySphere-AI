@@ -39,6 +39,7 @@ export const App: React.FC = () => {
               <Route path="/quizzes" element={<QuizGeneratorPage />} />
               <Route path="/quizzes/:id" element={<QuizArenaPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/profile" element={<SettingsPage />} />
             </Route>
 
             {/* Fallback */}

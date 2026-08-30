@@ -46,10 +46,11 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { RenameModal } from '../components/RenameModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const ChatWorkspacePage: React.FC = () => {
   const { user } = useAuth();
-  const { conversationId: routeConvId } = useParams<{ conversationId?: string }>();
+  const { id: routeConvId } = useParams<{ id?: string }>();
   const [searchParams] = useSearchParams();
   const queryDocId = searchParams.get('docId');
   const navigate = useNavigate();
@@ -184,6 +185,13 @@ export const ChatWorkspacePage: React.FC = () => {
     loadInitial();
   }, [user, routeConvId, queryDocId]);
 
+  // Sync activeConvId with route parameter
+  useEffect(() => {
+    if (routeConvId && routeConvId !== activeConvId) {
+      setActiveConvId(routeConvId);
+    }
+  }, [routeConvId]);
+
   // Load messages when activeConvId changes
   useEffect(() => {
     if (!activeConvId) {
@@ -281,20 +289,26 @@ export const ChatWorkspacePage: React.FC = () => {
     navigate('/chat');
   };
 
-  // Delete Conversation
-  const handleDeleteConv = async (e: React.MouseEvent, convId: string) => {
-    e.stopPropagation();
-    if (!user) return;
-    if (!window.confirm('Delete this conversation?')) return;
+  const [deleteConvTarget, setDeleteConvTarget] = useState<Conversation | null>(null);
+
+  const handleConfirmDeleteConv = async () => {
+    if (!user || !deleteConvTarget) return;
     try {
-      await deleteConversation(convId, user.uid);
-      setConversations((prev) => prev.filter((c) => c.id !== convId));
-      if (activeConvId === convId) {
+      await deleteConversation(deleteConvTarget.id, user.uid);
+      setConversations((prev) => prev.filter((c) => c.id !== deleteConvTarget.id));
+      if (activeConvId === deleteConvTarget.id) {
         handleNewChat();
       }
     } catch (err) {
       console.error('Failed to delete conversation:', err);
+    } finally {
+      setDeleteConvTarget(null);
     }
+  };
+
+  const handleDeleteConv = (e: React.MouseEvent, conv: Conversation) => {
+    e.stopPropagation();
+    setDeleteConvTarget(conv);
   };
 
   // Rename Conversation
@@ -440,7 +454,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         navigate(`/chat/${c.id}`);
                       }}
                       onRename={() => setRenameTarget(c)}
-                      onDelete={(e) => handleDeleteConv(e, c.id)}
+                      onDelete={(e) => handleDeleteConv(e, c)}
                     />
                   ))}
                 </div>
@@ -459,7 +473,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         navigate(`/chat/${c.id}`);
                       }}
                       onRename={() => setRenameTarget(c)}
-                      onDelete={(e) => handleDeleteConv(e, c.id)}
+                      onDelete={(e) => handleDeleteConv(e, c)}
                     />
                   ))}
                 </div>
@@ -478,7 +492,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         navigate(`/chat/${c.id}`);
                       }}
                       onRename={() => setRenameTarget(c)}
-                      onDelete={(e) => handleDeleteConv(e, c.id)}
+                      onDelete={(e) => handleDeleteConv(e, c)}
                     />
                   ))}
                 </div>
@@ -497,7 +511,7 @@ export const ChatWorkspacePage: React.FC = () => {
                         navigate(`/chat/${c.id}`);
                       }}
                       onRename={() => setRenameTarget(c)}
-                      onDelete={(e) => handleDeleteConv(e, c.id)}
+                      onDelete={(e) => handleDeleteConv(e, c)}
                     />
                   ))}
                 </div>
@@ -922,6 +936,18 @@ export const ChatWorkspacePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Delete Conversation Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteConvTarget}
+        type="danger"
+        title="Delete Chat Session"
+        message={`Are you sure you want to delete "${deleteConvTarget?.title || 'this conversation'}"? All chat history and generated answers in this session will be permanently erased.`}
+        confirmLabel="Delete Session"
+        cancelLabel="Keep Chat"
+        onConfirm={handleConfirmDeleteConv}
+        onCancel={() => setDeleteConvTarget(null)}
+      />
+
       {/* Rename Conversation Modal */}
       {renameTarget && (
         <RenameModal
@@ -999,7 +1025,7 @@ export const ChatWorkspacePage: React.FC = () => {
                             setShowMobileHistoryDrawer(false);
                             setRenameTarget(c);
                           }}
-                          onDelete={(e) => handleDeleteConv(e, c.id)}
+                          onDelete={(e) => handleDeleteConv(e, c)}
                         />
                       ))}
                     </div>
@@ -1022,7 +1048,7 @@ export const ChatWorkspacePage: React.FC = () => {
                             setShowMobileHistoryDrawer(false);
                             setRenameTarget(c);
                           }}
-                          onDelete={(e) => handleDeleteConv(e, c.id)}
+                          onDelete={(e) => handleDeleteConv(e, c)}
                         />
                       ))}
                     </div>
@@ -1045,7 +1071,7 @@ export const ChatWorkspacePage: React.FC = () => {
                             setShowMobileHistoryDrawer(false);
                             setRenameTarget(c);
                           }}
-                          onDelete={(e) => handleDeleteConv(e, c.id)}
+                          onDelete={(e) => handleDeleteConv(e, c)}
                         />
                       ))}
                     </div>
@@ -1068,7 +1094,7 @@ export const ChatWorkspacePage: React.FC = () => {
                             setShowMobileHistoryDrawer(false);
                             setRenameTarget(c);
                           }}
-                          onDelete={(e) => handleDeleteConv(e, c.id)}
+                          onDelete={(e) => handleDeleteConv(e, c)}
                         />
                       ))}
                     </div>
@@ -1285,8 +1311,8 @@ const ConvListItem: React.FC<ConvListItemProps> = ({
             e.stopPropagation();
             onDelete(e);
           }}
-          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-          title="Delete"
+          className="p-1.5 text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
+          title="Delete Chat"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

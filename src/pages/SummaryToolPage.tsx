@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { EmptyState } from '../components/EmptyState';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const SummaryToolPage: React.FC = () => {
   const { user } = useAuth();
@@ -40,6 +41,8 @@ export const SummaryToolPage: React.FC = () => {
 
   const [generating, setGenerating] = useState(false);
   const [activeSummary, setActiveSummary] = useState<SummaryItem | null>(null);
+  const [deleteTargetSummary, setDeleteTargetSummary] = useState<SummaryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -87,17 +90,20 @@ export const SummaryToolPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!user) return;
-    if (!window.confirm('Delete this saved summary?')) return;
+  const handleConfirmDelete = async () => {
+    if (!user || !deleteTargetSummary) return;
     try {
-      await deleteSummary(id, user.uid);
-      setSummaries((prev) => prev.filter((s) => s.id !== id));
-      if (activeSummary?.id === id) {
-        setActiveSummary(summaries.find((s) => s.id !== id) || null);
+      setDeleting(true);
+      await deleteSummary(deleteTargetSummary.id, user.uid);
+      setSummaries((prev) => prev.filter((s) => s.id !== deleteTargetSummary.id));
+      if (activeSummary?.id === deleteTargetSummary.id) {
+        setActiveSummary(summaries.find((s) => s.id !== deleteTargetSummary.id) || null);
       }
     } catch (err) {
       console.error('Failed to delete summary:', err);
+    } finally {
+      setDeleting(false);
+      setDeleteTargetSummary(null);
     }
   };
 
@@ -294,10 +300,10 @@ export const SummaryToolPage: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(summ.id);
+                          setDeleteTargetSummary(summ);
                         }}
-                        className="text-slate-400 hover:text-red-500 p-1"
-                        title="Delete"
+                        className="text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Summary"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -386,6 +392,19 @@ export const SummaryToolPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Summary Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTargetSummary}
+        type="danger"
+        title="Delete AI Summary"
+        message="Are you sure you want to delete this study summary? This action cannot be undone."
+        confirmLabel="Delete Summary"
+        cancelLabel="Keep Summary"
+        isLoading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetSummary(null)}
+      />
     </div>
   );
 };

@@ -14,6 +14,10 @@ import {
   Check,
   Save,
   Loader2,
+  Bell,
+  BellRing,
+  Smartphone,
+  Info,
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
@@ -32,10 +36,19 @@ export const SettingsPage: React.FC = () => {
   const [generalKnowledgeFallback, setGeneralKnowledgeFallback] = useState(true);
   const [language, setLanguage] = useState('en');
 
-  // PWA Install State
+  // Push Notification & PWA State
+  const [notificationPermission, setNotificationPermission] = useState<string>(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
+  const [isStandalone, setIsStandalone] = useState(false);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standaloneMatch = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+      setIsStandalone(!!standaloneMatch);
+    }
+
     const handleBeforeInstall = (e: any) => {
       e.preventDefault();
       setInstallPromptEvent(e);
@@ -43,6 +56,38 @@ export const SettingsPage: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, []);
+
+  const handleEnableNotifications = async () => {
+    if (!('Notification' in window)) {
+      alert('This browser does not support desktop notifications.');
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      setNotificationPermission(perm);
+      if (perm === 'granted') {
+        new Notification('StudySphere AI', {
+          body: '🔔 Notifications are enabled! Your study assistant is ready.',
+          icon: '/logo.jpeg',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handlePWAInstall = async () => {
+    if (!installPromptEvent) {
+      alert('To install StudySphere AI, tap your browser menu (⋮ or Share) and select "Add to Home Screen" / "Install App".');
+      return;
+    }
+    installPromptEvent.prompt();
+    const { outcome } = await installPromptEvent.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPromptEvent(null);
+      setIsStandalone(true);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -82,21 +127,8 @@ export const SettingsPage: React.FC = () => {
       setTimeout(() => setSaveSuccess(false), 2500);
     } catch (err) {
       console.error('Failed to save settings:', err);
-      alert('Failed to save settings.');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handlePWAInstall = async () => {
-    if (!installPromptEvent) {
-      alert('StudySphere AI is either already installed or your browser does not support install prompts from this button.');
-      return;
-    }
-    installPromptEvent.prompt();
-    const { outcome } = await installPromptEvent.userChoice;
-    if (outcome === 'accepted') {
-      setInstallPromptEvent(null);
     }
   };
 
@@ -105,15 +137,70 @@ export const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-12">
+    <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-fadeIn pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Settings & Preferences
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Profile & Settings
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Manage your account profile, AI tutor behavior, appearance themes, and device synchronization.
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+          Manage your account profile, AI tutor behavior, push notifications, and device options.
         </p>
+      </div>
+
+      {/* Prominent Action Cards for Push Notifications & PWA Install */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Push Notification Card (If not granted) */}
+        {notificationPermission !== 'granted' && (
+          <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-violet-600/10 via-purple-600/5 to-transparent border border-violet-500/30 dark:border-violet-500/30 flex flex-col justify-between space-y-4 shadow-lg shadow-violet-500/5">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+                <BellRing className="w-5 h-5 animate-pulse" />
+                <span className="font-bold text-xs uppercase tracking-wider">Push Notifications Disabled</span>
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                Turn On Study Reminders
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Receive daily study streak alerts, spaced repetition review notices, and instant updates when study materials finish processing.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleEnableNotifications}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md shadow-violet-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <Bell className="w-4 h-4" />
+              <span>Enable Notifications</span>
+            </button>
+          </div>
+        )}
+
+        {/* PWA App Install Card (If not standalone) */}
+        {!isStandalone && (
+          <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-indigo-600/10 via-blue-600/5 to-transparent border border-indigo-500/30 dark:border-indigo-500/30 flex flex-col justify-between space-y-4 shadow-lg shadow-indigo-500/5">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <Smartphone className="w-5 h-5" />
+                <span className="font-bold text-xs uppercase tracking-wider">StudySphere AI App</span>
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                Install Mobile & Desktop App
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Add StudySphere AI to your home screen for full-screen immersive study mode, fast offline caching, and instant launch.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePWAInstall}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Install App</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
