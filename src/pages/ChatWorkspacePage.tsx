@@ -669,10 +669,17 @@ export const ChatWorkspacePage: React.FC = () => {
                   },
                 ].map((item, idx) => (
                   <button
-                    key={idx}
-                    onClick={() => {
+                       onClick={() => {
                       setInputValue(item.prompt);
-                      if (inputRef.current) inputRef.current.focus();
+                      if (textareaRef.current) {
+                        textareaRef.current.focus();
+                        setTimeout(() => {
+                          if (textareaRef.current) {
+                            textareaRef.current.style.height = 'auto';
+                            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+                          }
+                        }, 50);
+                      }
                     }}
                     className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 hover:bg-violet-50/70 dark:hover:bg-violet-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-violet-400 dark:hover:border-violet-700 text-slate-800 dark:text-slate-200 transition-all hover:scale-[1.01] active:scale-[0.99] group shadow-sm text-left flex items-start gap-2.5 cursor-pointer"
                   >
@@ -839,63 +846,78 @@ export const ChatWorkspacePage: React.FC = () => {
         {showScrollDown && (
           <button
             onClick={() => scrollToBottom(true)}
-            className="absolute bottom-20 right-6 p-2.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-xl hover:scale-110 active:scale-95 transition-all z-20 animate-bounce-subtle cursor-pointer"
+            className="absolute bottom-24 right-6 p-2.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-xl hover:scale-110 active:scale-95 transition-all z-20 animate-bounce-subtle cursor-pointer"
             title="Scroll to latest response"
           >
             <ChevronDown className="w-5 h-5" />
           </button>
         )}
 
-        {/* Simple & Clean Input Area with Hover & Focus Glowing Effects */}
-        <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#090e1a]">
+        {/* Multiline Auto-Expanding Input Box with Glowing Effects */}
+        <div className="p-2.5 sm:p-4 border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#090e1a] w-full">
           <form
             onSubmit={handleSendMessage}
-            className="group relative flex items-center gap-2.5 bg-slate-100/90 dark:bg-[#101726] rounded-2xl px-4 py-2 border border-slate-200 dark:border-slate-800 hover:border-violet-400 dark:hover:border-violet-500/70 focus-within:border-violet-500 dark:focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-500/15 dark:focus-within:ring-violet-400/20 focus-within:shadow-[0_0_20px_rgba(139,92,246,0.18)] transition-all duration-300"
+            className="group relative flex items-end gap-2 bg-slate-100/90 dark:bg-[#101726] rounded-2xl p-2 sm:p-2.5 border border-slate-200 dark:border-slate-800 hover:border-violet-400 dark:hover:border-violet-500/70 focus-within:border-violet-500 dark:focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-500/15 dark:focus-within:ring-violet-400/20 focus-within:shadow-[0_0_20px_rgba(139,92,246,0.18)] transition-all duration-300 w-full"
           >
-            <input
-              ref={inputRef}
-              type="text"
+            <textarea
+              ref={textareaRef}
+              rows={1}
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={isListening ? 'Listening to your voice... speak now' : 'Ask anything about your study materials...'}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e as any);
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto';
+                  }
+                }
+              }}
+              placeholder={isListening ? 'Listening to your voice... speak now' : 'Ask anything about your study materials... (Shift+Enter for newline)'}
               disabled={sending}
-              className="flex-1 bg-transparent py-1.5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none border-none ring-0 min-w-0"
+              className="flex-1 bg-transparent py-1 px-2 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none border-none ring-0 resize-none min-h-[38px] max-h-[160px] leading-relaxed"
             />
 
-            {/* Glowing Voice Dictation Button */}
-            <button
-              type="button"
-              onClick={toggleVoiceRecording}
-              className={`p-2 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
-                isListening
-                  ? 'bg-red-500 text-white animate-pulse ring-4 ring-red-500/30 shadow-lg shadow-red-500/40 scale-110'
-                  : 'text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/80'
-              }`}
-              title={isListening ? 'Stop Listening' : 'Voice Dictation'}
-            >
-              {isListening ? (
-                <MicOff className="w-4 h-4" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
-            </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0 pb-0.5">
+              {/* Glowing Voice Dictation Button */}
+              <button
+                type="button"
+                onClick={toggleVoiceRecording}
+                className={`p-2 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
+                  isListening
+                    ? 'bg-red-500 text-white animate-pulse ring-4 ring-red-500/30 shadow-lg shadow-red-500/40 scale-110'
+                    : 'text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/80'
+                }`}
+                title={isListening ? 'Stop Listening' : 'Voice Dictation'}
+              >
+                {isListening ? (
+                  <MicOff className="w-4 h-4" />
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
+              </button>
 
-            <button
-              type="submit"
-              disabled={!inputValue.trim() || sending}
-              className={`p-2.5 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
-                inputValue.trim() && !sending
-                  ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-violet-500/30 hover:scale-105 active:scale-95'
-                  : 'bg-slate-200 dark:bg-slate-800/60 text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed'
-              }`}
-              title="Send Message"
-            >
-              {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </button>
+              <button
+                type="submit"
+                disabled={!inputValue.trim() || sending}
+                className={`p-2.5 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
+                  inputValue.trim() && !sending
+                    ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-violet-500/30 hover:scale-105 active:scale-95'
+                    : 'bg-slate-200 dark:bg-slate-800/60 text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed'
+                }`}
+                title="Send Message"
+              >
+                {sending ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>
