@@ -18,6 +18,7 @@ const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, '../dist');
 
 const app = express();
+const apiRouter = express.Router();
 const port = process.env.PORT || 5001;
 
 app.use(cors());
@@ -34,12 +35,12 @@ const upload = multer({
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
+apiRouter.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'StudySphere AI Backend', timestamp: new Date().toISOString() });
 });
 
 // 1. Auth Profile Sync
-app.post('/api/auth/sync', async (req, res) => {
+apiRouter.post('/auth/sync', async (req, res) => {
   const { firebaseUid, email, name, avatarUrl } = req.body;
   if (!firebaseUid || !email) {
     return res.status(400).json({ error: 'firebaseUid and email are required' });
@@ -87,7 +88,7 @@ app.post('/api/auth/sync', async (req, res) => {
 });
 
 // 2. Real Analytics
-app.get('/api/analytics/:userId', async (req, res) => {
+apiRouter.get('/analytics/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const [docsRes, convsRes, msgsRes, quizzesRes, attemptsRes, summariesRes] = await Promise.all([
@@ -127,7 +128,7 @@ app.get('/api/analytics/:userId', async (req, res) => {
 });
 
 // 3. Document Upload & Ingestion
-app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
+apiRouter.post('/documents/upload', upload.single('file'), async (req, res) => {
   const { userId } = req.body;
   const file = req.file;
 
@@ -208,7 +209,7 @@ app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
 });
 
 // 4. Document List
-app.get('/api/documents/:userId', async (req, res) => {
+apiRouter.get('/documents/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const { data: documents, error } = await supabase
@@ -226,7 +227,7 @@ app.get('/api/documents/:userId', async (req, res) => {
 });
 
 // 5. Rename Document
-app.patch('/api/documents/:id', async (req, res) => {
+apiRouter.patch('/documents/:id', async (req, res) => {
   const { id } = req.params;
   const { originalFileName, userId } = req.body;
   try {
@@ -246,7 +247,7 @@ app.patch('/api/documents/:id', async (req, res) => {
 });
 
 // 6. Delete Document
-app.delete('/api/documents/:id', async (req, res) => {
+apiRouter.delete('/documents/:id', async (req, res) => {
   const { id } = req.params;
   const { userId } = req.query;
   try {
@@ -264,7 +265,7 @@ app.delete('/api/documents/:id', async (req, res) => {
 });
 
 // 6b. Document Preview & Chunks Content
-app.get('/api/documents/:id/preview', async (req, res) => {
+apiRouter.get('/documents/:id/preview', async (req, res) => {
   const { id } = req.params;
   const { userId } = req.query;
   try {
@@ -294,9 +295,8 @@ app.get('/api/documents/:id/preview', async (req, res) => {
   }
 });
 
-
 // 7. Conversations
-app.get('/api/conversations/:userId', async (req, res) => {
+apiRouter.get('/conversations/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const { data: conversations, error } = await supabase
@@ -312,7 +312,7 @@ app.get('/api/conversations/:userId', async (req, res) => {
   }
 });
 
-app.post('/api/conversations', async (req, res) => {
+apiRouter.post('/conversations', async (req, res) => {
   const { userId, title, selectedDocumentMode, documentIds } = req.body;
   try {
     const { data: conv, error } = await supabase
@@ -341,7 +341,7 @@ app.post('/api/conversations', async (req, res) => {
   }
 });
 
-app.patch('/api/conversations/:id', async (req, res) => {
+apiRouter.patch('/conversations/:id', async (req, res) => {
   const { id } = req.params;
   const { title, selectedDocumentMode, documentIds, userId } = req.body;
   try {
@@ -371,7 +371,7 @@ app.patch('/api/conversations/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/conversations/:id', async (req, res) => {
+apiRouter.delete('/conversations/:id', async (req, res) => {
   const { id } = req.params;
   const { userId } = req.query;
   try {
@@ -388,7 +388,7 @@ app.delete('/api/conversations/:id', async (req, res) => {
   }
 });
 
-app.get('/api/conversations/:id/messages', async (req, res) => {
+apiRouter.get('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params;
   try {
     const { data: messages, error } = await supabase
@@ -405,7 +405,7 @@ app.get('/api/conversations/:id/messages', async (req, res) => {
 });
 
 // 8. RAG Chat Completion
-app.post('/api/chat', async (req, res) => {
+apiRouter.post('/chat', async (req, res) => {
   const { conversationId, userId, message, documentIds, selectedDocumentMode } = req.body;
   if (!userId || !message) {
     return res.status(400).json({ error: 'Missing userId or message' });
@@ -512,7 +512,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // 9. Quick AI Actions (Simplify, Explain More, Give Example)
-app.post('/api/chat/action', async (req, res) => {
+apiRouter.post('/chat/action', async (req, res) => {
   const { action, text } = req.body;
   if (!text || !action) {
     return res.status(400).json({ error: 'Missing text or action' });
@@ -545,7 +545,7 @@ app.post('/api/chat/action', async (req, res) => {
 });
 
 // 10. Summaries Generation
-app.post('/api/summaries/generate', async (req, res) => {
+apiRouter.post('/summaries/generate', async (req, res) => {
   const { userId, documentId, summaryType } = req.body;
   if (!userId || !documentId || !summaryType) {
     return res.status(400).json({ error: 'Missing required parameters' });
@@ -627,7 +627,7 @@ Format with clean Markdown, clear typography, and highlighted key takeaways.`;
 });
 
 // 11. List Summaries
-app.get('/api/summaries/:userId', async (req, res) => {
+apiRouter.get('/summaries/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const { data: summaries, error } = await supabase
@@ -651,7 +651,7 @@ app.get('/api/summaries/:userId', async (req, res) => {
   }
 });
 
-app.delete('/api/summaries/:id', async (req, res) => {
+apiRouter.delete('/summaries/:id', async (req, res) => {
   const { id } = req.params;
   const { userId } = req.query;
   try {
@@ -669,7 +669,7 @@ app.delete('/api/summaries/:id', async (req, res) => {
 });
 
 // 12. Quiz Generator
-app.post('/api/quizzes/generate', async (req, res) => {
+apiRouter.post('/quizzes/generate', async (req, res) => {
   const { userId, documentId, title, difficulty = 'medium', questionCount = 5, questionType = 'mcq' } = req.body;
   if (!userId || !documentId) {
     return res.status(400).json({ error: 'Missing userId or documentId' });
@@ -823,7 +823,7 @@ ${docText}
 });
 
 // 13. List Quizzes & Attempts
-app.get('/api/quizzes/:userId', async (req, res) => {
+apiRouter.get('/quizzes/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const { data: quizzes, error } = await supabase
@@ -847,7 +847,7 @@ app.get('/api/quizzes/:userId', async (req, res) => {
   }
 });
 
-app.get('/api/quizzes/:id/details', async (req, res) => {
+apiRouter.get('/quizzes/:id/details', async (req, res) => {
   const { id } = req.params;
   try {
     const { data: quiz, error: quizErr } = await supabase
@@ -880,7 +880,7 @@ app.get('/api/quizzes/:id/details', async (req, res) => {
   }
 });
 
-app.post('/api/quizzes/:id/attempt', async (req, res) => {
+apiRouter.post('/quizzes/:id/attempt', async (req, res) => {
   const { id } = req.params;
   const { userId, answers } = req.body;
   if (!userId || !answers || !Array.isArray(answers)) {
@@ -949,7 +949,7 @@ app.post('/api/quizzes/:id/attempt', async (req, res) => {
 });
 
 // 14. Settings
-app.get('/api/settings/:userId', async (req, res) => {
+apiRouter.get('/settings/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const { data: settings } = await supabase
@@ -980,7 +980,7 @@ app.get('/api/settings/:userId', async (req, res) => {
   }
 });
 
-app.post('/api/settings/:userId', async (req, res) => {
+apiRouter.post('/settings/:userId', async (req, res) => {
   const { userId } = req.params;
   const { theme, answerStyle, showSources, generalKnowledgeFallback, language } = req.body;
   try {
@@ -1007,6 +1007,10 @@ app.post('/api/settings/:userId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Mount API routes for both `/api/*` and `/*` (vital for Vercel / serverless routing)
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 // SPA Catch-all: serve index.html for any client-side routes on refresh
 app.get('*', (req, res, next) => {

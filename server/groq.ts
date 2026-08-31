@@ -5,12 +5,23 @@ dotenv.config();
 
 const groqApiKey = process.env.GROQ_API_KEY || '';
 
+if (!groqApiKey) {
+  console.warn('⚠️ GROQ_API_KEY is not set in environment variables.');
+}
+
 export const groq = new Groq({
-  apiKey: groqApiKey,
+  apiKey: groqApiKey || 'dummy_key',
 });
 
-export const PRIMARY_MODEL = 'openai/gpt-oss-120b';
-export const FALLBACK_MODEL = 'qwen/qwen3.8-27b';
+export const AVAILABLE_MODELS = [
+  'openai/gpt-oss-120b',
+  'qwen/qwen3.8-27b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.6-27b',
+  'groq/compound',
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+];
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -22,34 +33,40 @@ export async function generateGroqCompletion(
   temperature: number = 0.3,
   responseFormat?: { type: 'json_object' }
 ): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY || groqApiKey;
+  if (!apiKey || apiKey === 'dummy_key') {
+    throw new Error('GROQ_API_KEY is missing on the server. Please add GROQ_API_KEY to your deployment Environment Variables in your hosting dashboard (e.g. Vercel Project Settings > Environment Variables).');
+  }
+
   // Truncate messages if total text length is too large to prevent 413 rate limit
   const sanitizedMessages = messages.map((m) => ({
     role: m.role,
     content: m.content.length > 5000 ? m.content.slice(0, 5000) + '...' : m.content,
   }));
 
-  try {
-    const chatCompletion = await groq.chat.completions.create({
-      messages: sanitizedMessages,
-      model: PRIMARY_MODEL,
-      temperature,
-      response_format: responseFormat,
-    });
+  let lastError: any = null;
 
-    return chatCompletion.choices[0]?.message?.content || '';
-  } catch (err: any) {
-    console.warn(`Groq primary model (${PRIMARY_MODEL}) fallback:`, err?.message);
+  for (const model of AVAILABLE_MODELS) {
     try {
-      const fallbackCompletion = await groq.chat.completions.create({
+      const chatCompletion = await groq.chat.completions.create({
         messages: sanitizedMessages,
-        model: FALLBACK_MODEL,
+        model,
         temperature,
         response_format: responseFormat,
       });
-      return fallbackCompletion.choices[0]?.message?.content || '';
-    } catch (fallbackErr: any) {
-      console.error('Groq generation error:', fallbackErr);
-      throw new Error(`AI generation failed: ${fallbackErr.message || 'Unknown Groq error'}`);
+
+      const content = chatCompletion.choices[0]?.message?.content || '';
+      if (content) {
+        return content;
+      }
+    } catch (err: any) {
+      console.warn(`Groq model (${model}) failed:`, err?.message);
+      lastError = err;
+      // Continue to next fallback model
     }
   }
+
+  console.error('All Groq models failed:', lastError);
+  throw new Error(`AI generation failed: ${lastError?.message || 'Unknown Groq error'}`);
 }
+

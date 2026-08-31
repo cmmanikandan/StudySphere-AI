@@ -451,89 +451,13 @@ export async function sendChatMessage(params: {
       const data = await res.json();
       return data;
     }
-  } catch (err) {
-    console.warn('Backend chat API notice, falling back to direct grounded answering:', err);
+
+    const errJson = await res.json().catch(() => ({ error: `Server error ${res.status}: ${res.statusText}` }));
+    throw new Error(errJson.error || `API returned status ${res.status}`);
+  } catch (err: any) {
+    console.error('Chat API error:', err);
+    throw err;
   }
-
-  // Client-side Direct Persistence Fallback (Guaranteed to save chats and messages to Supabase)
-  let convId = params.conversationId;
-  if (!convId) {
-    const title = params.message.length > 40 ? params.message.slice(0, 40) + '...' : params.message;
-    const { data: newConv, error: convErr } = await supabase
-      .from('conversations')
-      .insert({
-        user_id: params.userId,
-        title,
-        selected_document_mode: params.selectedDocumentMode || 'all',
-      })
-      .select('*')
-      .single();
-
-    if (convErr) throw convErr;
-    convId = newConv.id;
-  }
-
-  // 1. Save User message to Supabase
-  const { data: userMsg, error: uErr } = await supabase
-    .from('messages')
-    .insert({
-      conversation_id: convId,
-      user_id: params.userId,
-      role: 'user',
-      content: params.message,
-      sources: [],
-    })
-    .select('*')
-    .single();
-
-  if (uErr) throw uErr;
-
-  // 2. Grounded Chunks Search
-  let queryBuilder = supabase.from('document_chunks').select('chunk_text, page_number, document_id, documents(original_file_name)').eq('user_id', params.userId);
-  if (params.selectedDocumentMode === 'selected' && params.documentIds && params.documentIds.length > 0) {
-    queryBuilder = queryBuilder.in('document_id', params.documentIds);
-  }
-  const { data: chunks } = await queryBuilder.limit(6);
-
-  const sources: SourceCitation[] = (chunks || []).map((c: any) => ({
-    documentId: c.document_id,
-    documentName: c.documents?.original_file_name || 'Study Material',
-    pageNumber: c.page_number || 1,
-    excerpt: c.chunk_text.slice(0, 180) + '...',
-    relevanceScore: 0.95,
-  }));
-
-  const contextText = (chunks || []).map((c: any) => `[${c.documents?.original_file_name || 'Doc'} - Page ${c.page_number}]: ${c.chunk_text}`).join('\n\n');
-
-  let answer = '';
-  if (contextText.trim()) {
-    answer = `Based on your grounded study materials:\n\n${(chunks || [])[0]?.chunk_text.slice(0, 500) || ''}\n\n### Key Concepts Breakdown:\n- **Core Principle**: ${(chunks || [])[0]?.chunk_text.slice(0, 120) || 'Verified academic material.'}\n- **Detailed Explanation**: StudySphere AI has analyzed your course documents to synthesize these findings.\n- **Exam Tip**: Make sure to review the verified source references below for full context.`;
-  } else {
-    answer = `I have received your question regarding: "${params.message}".\n\nTo give you answers grounded in your specific class notes and textbooks, upload your course materials in the **Study Library** or select existing documents using the **Select Documents** button in the header bar above.`;
-  }
-
-  // 3. Save Assistant message to Supabase
-  const { data: assistantMsg, error: aErr } = await supabase
-    .from('messages')
-    .insert({
-      conversation_id: convId,
-      user_id: params.userId,
-      role: 'assistant',
-      content: answer,
-      sources: sources,
-    })
-    .select('*')
-    .single();
-
-  if (aErr) throw aErr;
-
-  return {
-    conversationId: convId || '',
-    userMessage: userMsg,
-    assistantMessage: assistantMsg,
-    sources,
-    isFallback: true,
-  };
 }
 
 export async function executeChatAction(action: 'simplify' | 'explain_more' | 'give_example', text: string): Promise<string> {
